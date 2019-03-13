@@ -131,7 +131,7 @@ def main(args):
     train(model=model, data_train=train_iter, optimizer=optimizer,
           loss_fn=nn.NLLLoss(ignore_index=character_map[PADDING]),
           steps=1000, log_interval=100, valid_interval=100,
-          data_valid=valid_iter, device=torch.device("cuda") if False else None)
+          data_valid=valid_iter, device=torch.device("cuda") if use_gpu else None)
 
 
 if __name__ == '__main__':
