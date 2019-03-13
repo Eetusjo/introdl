@@ -73,7 +73,7 @@ def evaluate(model, data, device):
                     x_lengths.to(device=device), \
                     y.to(device=device)
 
-            output = model(x, x_lengths)
+            output = model(x, x_lengths, device)
 
     model.train()
 
