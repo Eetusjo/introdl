@@ -110,6 +110,8 @@ class DataIterator:
 
 def main(args):
     use_gpu = args.cuda and torch.cuda.is_available()
+    logging.info("Using gpu: {}".format(use_gpu))
+    print("Using gpu: {}".format(use_gpu))
     # setup data_loader instances
     data, character_map = read_datasets(args.language + '-task1', data_dir)
     trainset = [datapoint for datapoint in data['training']]
