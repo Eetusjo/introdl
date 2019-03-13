@@ -122,7 +122,8 @@ def main(args):
     valid_iter = DataIterator(validset, 128, character_map)
 
     # build model architecture
-    model = models.Seq2SeqModel(embedding_dim=128, hidden_dim=512,
+    model = models.Seq2SeqModel(embedding_dim=args.embedding_dim,
+                                hidden_dim=args.hidden_dim=,
                                 vocabulary_size=len(character_map),
                                 max_target_length=50,
                                 sos=character_map[WORD_START])
@@ -142,6 +143,14 @@ if __name__ == '__main__':
     parser.add_argument("--language", choices=["finnish", "german", "navajo"],
                         required=True, help="Language to train.")
     parser.add_argument("--cuda", action="store_true", help="Use gpu")
+    parser.add_argument("--embedding_dim", type=int, default=128,
+                        help="Dimensionality of char embeddings")
+    parser.add_argument("--hidden_dim", type=int, default=256,
+                        help="Dimensionality of LSTM hidden states")
+    parser.add_argument("--bsize", type=int, default=32,
+                        help="Batch size")
+    parser.add_argument("--valid_bsize", type=int, default=128,
+                        help="Validation batch size")
     args = parser.parse_args()
 
     main(args)
