@@ -6,8 +6,10 @@ import torch
 
 from collections import defaultdict as dd
 
-WORD_BOUNDARY='#'
-UNK='UNK'
+WORD_START = "<w>"
+WORD_END = "</w>"
+PADDING = '#'
+UNK = 'UNK'
 
 def read_lines(fn):
     data = []
@@ -29,17 +31,16 @@ def read_lines(fn):
 
 
 def compute_tensor(word_ex,charmap):
-    word_ex['SOURCE_TENSOR'] = torch.LongTensor([charmap[WORD_BOUNDARY]]
+    word_ex['SOURCE_TENSOR'] = torch.LongTensor([charmap[WORD_START]]
                                      + [charmap[c] if c in charmap
                                                    else charmap[UNK]
                                                    for c in word_ex['TOKENIZED_SOURCE']]
-                                     + [charmap[WORD_BOUNDARY]])
+                                     + [charmap[WORD_END]])
 
-    word_ex['TARGET_TENSOR'] = torch.LongTensor([charmap[WORD_BOUNDARY]]
-                                     + [charmap[c] if c in charmap
-                                                   else charmap[UNK]
-                                                   for c in word_ex['TOKENIZED_TARGET']]
-                                     + [charmap[WORD_BOUNDARY]])
+    word_ex['TARGET_TENSOR'] = torch.LongTensor(
+        [charmap[WORD_START]] + [charmap[c] if c in charmap else charmap[UNK]
+                                 for c in word_ex['TOKENIZED_TARGET']]
+        + [charmap[WORD_END]])
 
 
 def read_datasets(prefix,data_dir):
@@ -50,18 +51,19 @@ def read_datasets(prefix,data_dir):
                 'test': read_lines(os.path.join(data_dir, '%s-%s' %
                                                 (prefix, 'test')))}
 
-
-    charmap = {c:i for i,c in enumerate({c for ex in datasets['training']
-                                         for c in ex['TOKENIZED_LINE']})}
+    charmap = {c: i for i, c in enumerate({c for ex in datasets['training']
+                                          for c in ex['TOKENIZED_LINE']})}
     charmap[UNK] = len(charmap)
-    charmap[WORD_BOUNDARY] = len(charmap)
+    charmap[WORD_START] = len(charmap)
+    charmap[WORD_END] = len(charmap)
+    charmap[PADDING] = len(charmap)
 
     for word_ex in datasets['training']:
-        compute_tensor(word_ex,charmap)
+        compute_tensor(word_ex, charmap)
     for word_ex in datasets['dev']:
-        compute_tensor(word_ex,charmap)
+        compute_tensor(word_ex, charmap)
     for word_ex in datasets['test']:
-        compute_tensor(word_ex,charmap)
+        compute_tensor(word_ex, charmap)
 
     return datasets, charmap
 
@@ -78,7 +80,7 @@ def get_minibatch(minibatchwords, character_map, languages):
 
 
 def pad_minibatch(minibatchwords, src_word_lengths, tgt_word_lengths, character_map):
-    pad_token = character_map[WORD_BOUNDARY]
+    pad_token = character_map[PADDING]
     src_longest_word, tgt_longest_word = max(src_word_lengths), max(tgt_word_lengths)
 
     src_padded_mb = np.ones((len(minibatchwords), src_longest_word)) * pad_token
@@ -96,7 +98,6 @@ def pad_minibatch(minibatchwords, src_word_lengths, tgt_word_lengths, character_
     tgt_padded_mb = torch.from_numpy(tgt_padded_mb).type(torch.LongTensor)
 
     return src_padded_mb, tgt_padded_mb
-
 
 
 if __name__=='__main__':
