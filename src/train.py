@@ -4,7 +4,7 @@ import models
 import torch
 import torch.nn as nn
 
-from data import read_datasets, WORD_BOUNDARY, UNK, get_minibatch
+from data import read_datasets, WORD_START, UNK, get_minibatch, PADDING
 from paths import data_dir
 
 logging.basicConfig(format="%(asctime)s: %(message)s",
@@ -12,7 +12,8 @@ logging.basicConfig(format="%(asctime)s: %(message)s",
                     level=logging.DEBUG)
 
 
-def train(model, data_train, optimizer, loss_fn, steps, log_interval):
+def train(model, data_train, optimizer, loss_fn, steps, log_interval=100,
+          valid_interval=-1, data_valid=None, device=None):
         """"TODO."""
         model.train()
         running_loss = 0
@@ -21,6 +22,11 @@ def train(model, data_train, optimizer, loss_fn, steps, log_interval):
         while step < steps:
             for batch in data_train:
                 x, x_lengths, y = batch
+
+                if device:
+                    x, x_lengths, y = x.to(device=device), \
+                                      x_lengths.to(device=device), \
+                                      y.to(device=device)
 
                 optimizer.zero_grad()
                 output = model(x, x_lengths)
@@ -42,31 +48,36 @@ def train(model, data_train, optimizer, loss_fn, steps, log_interval):
                         )
                     )
 
+                if valid_interval > 0 and data_valid and step % valid_interval == 0:
+                    val_metrics = evaluate(model, data_valid, device)
+                    logging.info(
+                        'Validation step {}/{} ({:.0f}%) loss: {:.6f} accuracy: {:.1f}'.format(
+                            step, steps, 100*step/steps, val_metrics["loss"],
+                            val_metrics["accuracy"]
+                        )
+                    )
+
                 step += 1
                 if step >= steps:
                     break
 
-            # if do_validation:
-            #     val_log = self._valid_epoch(epoch)
-            #     log = {**log, **val_log}
 
-            # if lr_scheduler is not None:
-            #     lr_scheduler.step()
-
-            # if (teacherf_decrease > 0) and model.teacherf_ratio > 0:
-            #     model.teacherf_ratio -= teacherf_decrease
-            #     if model.teacherf_ratio < 0:
-            #         model.teacherf_ratio = 0
-            #     logging.info(
-            #         'Teacher forcing ratio set to: {}'.format(model.teacherf_ratio)
-            #     )
-
-
-def validate(model, data_valid):
+def evaluate(model, data, device):
     model.eval()
+    with torch.no_grad():
+        for batch in data:
+            x, x_lengths, y = batch
+
+            if device:
+                x, x_lengths, y = x.to(device=device), \
+                    x_lengths.to(device=device), \
+                    y.to(device=device)
+
+            output = model(x, x_lengths)
+
     model.train()
 
-    raise NotImplementedError()
+    return {"loss": 0., "accuracy": 0.}
 
 
 class DataIterator:
@@ -98,28 +109,37 @@ class DataIterator:
 
 
 def main(lang):
+    use_gpu = args.cuda and torch.cuda.is_available()
     # setup data_loader instances
     data, character_map = read_datasets(lang + '-task1', data_dir)
     trainset = [datapoint for datapoint in data['training']]
     train_iter = DataIterator(trainset, 16, character_map)
 
+    validset = [datapoint for datapoint in data['dev']]
+    valid_iter = DataIterator(validset, 128, character_map)
+
     # build model architecture
     model = models.Seq2SeqModel(embedding_dim=128, hidden_dim=512,
                                 vocabulary_size=len(character_map),
                                 max_target_length=50,
-                                sos=character_map[WORD_BOUNDARY])
+                                sos=character_map[WORD_START])
+    if use_gpu:
+        model.to(device="cuda")
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 
     train(model=model, data_train=train_iter, optimizer=optimizer,
-          loss_fn=nn.NLLLoss(ignore_index=character_map[WORD_BOUNDARY]),
-          steps=10000, log_interval=100)
+          loss_fn=nn.NLLLoss(ignore_index=character_map[PADDING]),
+          steps=10000, log_interval=100, valid_interval=100,
+          data_valid=valid_iter, device=torch.device("cuda") if use_gpu else None)
 
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='PyTorch Template')
-    parser.add_argument("--placeholder", action="store_true")
+    parser = argparse.ArgumentParser(description='Placeholder')
+    parser.add_argument("--language", choices=["finnish", "german", "navajo"],
+                        required=True, help="Language to train.")
+    parser.add_argument("--cuda", action="store_true", help="Use gpu")
     args = parser.parse_args()
 
     main("finnish")
