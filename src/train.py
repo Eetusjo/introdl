@@ -29,7 +29,7 @@ def train(model, data_train, optimizer, loss_fn, steps, log_interval=100,
                                       y.to(device=device)
 
                 optimizer.zero_grad()
-                output = model(x, x_lengths)
+                output = model(x, x_lengths, device)
 
                 # Sum losses from each decoder timestep
                 loss = sum(
