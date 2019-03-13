@@ -110,8 +110,9 @@ class DataIterator:
 
 def main(args):
     use_gpu = args.cuda and torch.cuda.is_available()
+    device = torch.device("cuda") if use_gpu else None
+
     logging.info("Using gpu: {}".format(use_gpu))
-    print("Using gpu: {}".format(use_gpu))
     # setup data_loader instances
     data, character_map = read_datasets(args.language + '-task1', data_dir)
     trainset = [datapoint for datapoint in data['training']]
@@ -126,14 +127,14 @@ def main(args):
                                 max_target_length=50,
                                 sos=character_map[WORD_START])
     if use_gpu:
-        model.to(device="cuda")
+        model.to(device=device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 
     train(model=model, data_train=train_iter, optimizer=optimizer,
           loss_fn=nn.NLLLoss(ignore_index=character_map[PADDING]),
           steps=1000, log_interval=100, valid_interval=100,
-          data_valid=valid_iter, device=torch.device("cuda") if use_gpu else None)
+          data_valid=valid_iter, device=device)
 
 
 if __name__ == '__main__':
