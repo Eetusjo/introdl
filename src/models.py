@@ -43,7 +43,7 @@ class Seq2SeqModel(nn.Module):
             dtype=torch.long
         )
         if device:
-            decoder_input.to(device=device)
+            decoder_input = decoder_input.to(device=device)
 
         # Collect these for returning and calculating loss
         decoder_outputs = []
