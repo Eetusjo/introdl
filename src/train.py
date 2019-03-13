@@ -94,7 +94,7 @@ class DataIterator:
 
     def __next__(self):
         if self.b > self.n:
-            self.b = 0
+            raise StopIteration
 
         curr = self.b
         self.b += self.batch_size
@@ -103,15 +103,15 @@ class DataIterator:
                        key=lambda x: len(x["SOURCE"].split(" ")),
                        reverse=True)
         x, y = get_minibatch(batch, self.char_map, None)
-        x_lengths = [len(b["SOURCE"].split(" ")) for b in batch]
+        x_lengths = torch.tensor([len(b["SOURCE"].split(" ")) for b in batch])
 
         return x, x_lengths, y
 
 
-def main(lang):
+def main(args):
     use_gpu = args.cuda and torch.cuda.is_available()
     # setup data_loader instances
-    data, character_map = read_datasets(lang + '-task1', data_dir)
+    data, character_map = read_datasets(args.language + '-task1', data_dir)
     trainset = [datapoint for datapoint in data['training']]
     train_iter = DataIterator(trainset, 16, character_map)
 
@@ -130,9 +130,8 @@ def main(lang):
 
     train(model=model, data_train=train_iter, optimizer=optimizer,
           loss_fn=nn.NLLLoss(ignore_index=character_map[PADDING]),
-          steps=10000, log_interval=100, valid_interval=100,
-          data_valid=valid_iter, device=torch.device("cuda") if use_gpu else None)
-
+          steps=1000, log_interval=100, valid_interval=100,
+          data_valid=valid_iter, device=torch.device("cuda") if False else None)
 
 
 if __name__ == '__main__':
@@ -142,4 +141,4 @@ if __name__ == '__main__':
     parser.add_argument("--cuda", action="store_true", help="Use gpu")
     args = parser.parse_args()
 
-    main("finnish")
+    main(args)
