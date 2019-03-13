@@ -29,7 +29,7 @@ class Seq2SeqModel(nn.Module):
         )
         self.out = nn.Linear(self.hidden_dim, vocabulary_size)
 
-    def forward(self, x, x_lengths):
+    def forward(self, x, x_lengths, device=None):
         batch_size = len(x_lengths)
 
         x_ = self.embedding(x)
@@ -42,6 +42,8 @@ class Seq2SeqModel(nn.Module):
             [[self.sos for _ in range(len(x_lengths))]],
             dtype=torch.long
         )
+        if device:
+            decoder_input.to(device=device)
 
         # Collect these for returning and calculating loss
         decoder_outputs = []
