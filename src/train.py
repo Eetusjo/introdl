@@ -58,7 +58,8 @@ def train(model, data_train, optimizer, loss_fn, steps, log_interval=100,
                     )
 
                 if valid_interval > 0 and data_valid and step % valid_interval == 0:
-                    val_metrics = evaluate(model, data_valid, id2char_map, device)
+                    val_metrics = evaluate(model, data_valid, id2char_map,
+                                           loss_fn, device)
                     logging.info(
                         'Validation step {}/{} ({:.0f}%) loss: {:.6f} accuracy: {:.1f}'.format(
                             step, steps, 100*step/steps, val_metrics["loss"],
