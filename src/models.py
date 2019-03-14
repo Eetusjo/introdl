@@ -17,7 +17,8 @@ class Seq2SeqModel(nn.Module):
         self.sos = sos
 
         # self.teacherf_ratio = 0.5
-        self.embedding = nn.Embedding(vocabulary_size + 1, embedding_dim)
+        self.embedding_enc = nn.Embedding(vocabulary_size + 1, embedding_dim)
+        self.embedding_dec = nn.Embedding(vocabulary_size + 1, embedding_dim)
 
         self.encoder = nn.LSTM(
             input_size=self.embedding_dim,
@@ -32,7 +33,7 @@ class Seq2SeqModel(nn.Module):
     def forward(self, x, x_lengths, device):
         batch_size = len(x_lengths)
 
-        x_ = self.embedding(x)
+        x_ = self.embedding_enc(x)
         x_ = pack_padded_sequence(x_, x_lengths)
 
         encoder_outputs, hidden = self.encoder(x_)
@@ -49,7 +50,7 @@ class Seq2SeqModel(nn.Module):
             if device:
                 decoder_input = decoder_input.to(device=device)
 
-            decoder_input = self.embedding(decoder_input)
+            decoder_input = self.embedding_dec(decoder_input)
             decoder_output, hidden = self.decoder(
                 decoder_input, hidden)
 
