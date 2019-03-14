@@ -29,6 +29,9 @@ def read_lines(fn):
 
     return data
 
+def ids2char(output):
+    pass
+
 
 def compute_tensor(word_ex,charmap):
     word_ex['SOURCE_TENSOR'] = torch.LongTensor([charmap[WORD_START]]
@@ -53,10 +56,23 @@ def read_datasets(prefix,data_dir):
 
     charmap = {c: i for i, c in enumerate({c for ex in datasets['training']
                                           for c in ex['TOKENIZED_LINE']})}
+
+    idmap = {i: c for i, c in enumerate({c for ex in datasets['training']
+                                          for c in ex['TOKENIZED_LINE']})}
+
+
     charmap[UNK] = len(charmap)
+    idmap[len(charmap)-1] = UNK
+
     charmap[WORD_START] = len(charmap)
+    idmap[len(charmap)-1] = WORD_START
+
     charmap[WORD_END] = len(charmap)
+    idmap[len(charmap)-1] = WORD_END
+
     charmap[PADDING] = len(charmap)
+    idmap[len(charmap)-1] = PADDING
+
 
     for word_ex in datasets['training']:
         compute_tensor(word_ex, charmap)
@@ -65,7 +81,7 @@ def read_datasets(prefix,data_dir):
     for word_ex in datasets['test']:
         compute_tensor(word_ex, charmap)
 
-    return datasets, charmap
+    return datasets, charmap, idmap
 
 
 def get_minibatch(minibatchwords, character_map, languages):
