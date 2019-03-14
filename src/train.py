@@ -58,8 +58,7 @@ def train(model, data_train, optimizer, loss_fn, steps, log_interval=100,
                     )
 
                 if valid_interval > 0 and data_valid and step % valid_interval == 0:
-                    val_metrics = evaluate(model, data_valid, id2char_map,
-                                           loss_fn, device)
+                    val_metrics = evaluate(model, data_valid, id2char_map, device)
                     logging.info(
                         'Validation step {}/{} ({:.0f}%) loss: {:.6f} accuracy: {:.1f}'.format(
                             step, steps, 100*step/steps, val_metrics["loss"],
@@ -71,13 +70,14 @@ def train(model, data_train, optimizer, loss_fn, steps, log_interval=100,
                         torch.save(model, "{}/{}-{}.pt".format(
                             save_dir, exp_name, step
                         ))
+                        best_valid_loss = val_metrics["loss"]
 
                 step += 1
                 if step >= steps:
                     break
 
 
-def evaluate(model, data, id2char_map, loss_fn, device):
+def evaluate(model, data, id2char_map, device):
     correct = 0
     total = 0
 
@@ -132,7 +132,7 @@ def evaluate(model, data, id2char_map, loss_fn, device):
 
     model.train()
 
-    return {"loss": loss_sum/batches, "accuracy": 100.0 * correct / total}
+    return {"loss": loss_sum/batches, "accuracy": 0.}
 
 
 class DataIterator:
@@ -201,8 +201,8 @@ def main(args):
           loss_fn=nn.NLLLoss(ignore_index=character_map[PADDING]),
           steps=args.steps, log_interval=args.log_interval,
           valid_interval=args.valid_interval, data_valid=valid_iter,
-          save_dir=args.save_dir, exp_name=args.exp,
-          id2char_map=id2char_map, device=device)
+          save_dir=args.save_dir, exp_name=args.exp, id2char_map=id2char_map,
+          device=device)
 
 
 if __name__ == '__main__':
