@@ -77,7 +77,7 @@ def train(model, data_train, optimizer, loss_fn, steps, log_interval=100,
                     break
 
 
-def evaluate(model, data, id2char_map, device):
+def evaluate(model, data, id2char_map, loss_fn, device):
     correct = 0
     total = 0
 
@@ -120,8 +120,7 @@ def evaluate(model, data, id2char_map, device):
 
             total += batch_size
             n_correct = len([x for x, y in zip(x_strings, y_strings) if x==y])
-
-
+            correct += n_correct
 
             # Sum losses from each decoder timestep
             loss = sum(
@@ -132,7 +131,7 @@ def evaluate(model, data, id2char_map, device):
 
     model.train()
 
-    return {"loss": loss_sum/batches, "accuracy": 0.}
+    return {"loss": loss_sum/batches, "accuracy": 100.0 * correct / total}
 
 
 class DataIterator:
