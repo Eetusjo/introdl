@@ -181,7 +181,8 @@ def main(args):
     valid_iter = DataIterator(validset, args.valid_bsize, character_map)
 
     # build model architecture
-    model = models.Seq2SeqModel(embedding_dim=args.embedding_dim,
+    model = models.Seq2SeqModel(attention=args.attention,
+                                embedding_dim=args.embedding_dim,
                                 hidden_dim=args.hidden_dim,
                                 vocabulary_size=len(character_map),
                                 max_target_length=50,
@@ -211,6 +212,8 @@ if __name__ == '__main__':
                         help="Name for experiment. Used in saving model.")
     parser.add_argument("--language", choices=["finnish", "german", "navajo"],
                         required=True, help="Language to train.")
+    parser.add_argument("--attention", action="store_true",
+                        help="Use attention")
     parser.add_argument("--embedding_dim", type=int, default=128,
                         help="Dimensionality of char embeddings")
     parser.add_argument("--hidden_dim", type=int, default=256,
