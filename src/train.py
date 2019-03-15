@@ -4,8 +4,8 @@ import models
 import os
 import torch
 import torch.nn as nn
+import random
 import re
-import numpy as np
 
 from data import read_datasets, WORD_START, UNK, get_minibatch, PADDING
 from paths import data_dir
@@ -138,6 +138,7 @@ def evaluate(model, data, id2char_map, loss_fn, device):
 class DataIterator:
     def __init__(self, data, batch_size, char_map):
         self.data = data
+        random.shuffle(self.data)
         self.batch_size = batch_size
         self.char_map = char_map
 
@@ -150,6 +151,7 @@ class DataIterator:
     def __next__(self):
         if self.b > self.n:
             self.b = 0
+            random.shuffle(self.data)
             raise StopIteration
 
         curr = self.b
@@ -159,7 +161,7 @@ class DataIterator:
                        key=lambda x: len(x["SOURCE"].split(" ")),
                        reverse=True)
         x, y = get_minibatch(batch, self.char_map, None)
-        x_lengths = torch.tensor([len(b["SOURCE"].split(" ")) for b in batch])
+        x_lengths = torch.sum(torch.ne(x, self.char_map[PADDING]), dim=0)
 
         return x, x_lengths, y
 
