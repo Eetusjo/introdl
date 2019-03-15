@@ -198,12 +198,21 @@ def main(args):
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
 
+    loss_fn = nn.NLLLoss(ignore_index=character_map[PADDING])
     train(model=model, data_train=train_iter, optimizer=optimizer,
-          loss_fn=nn.NLLLoss(ignore_index=character_map[PADDING]),
-          steps=args.steps, log_interval=args.log_interval,
+          loss_fn=loss_fn, steps=args.steps, log_interval=args.log_interval,
           valid_interval=args.valid_interval, data_valid=valid_iter,
           save_dir=args.save_dir, exp_name=args.exp, id2char_map=id2char_map,
           device=device)
+
+    testset = [datapoint for datapoint in data['test']]
+    test_iter = DataIterator(testset, args.valid_bsize, character_map)
+
+    test_metrics = model.evaluate(model, test_iter, id2char_map, loss_fn, device)
+
+    logging.info("Final metrics on test set:\nloss: {}\naccuracy: {}\n".format(
+        test_metrics["loss"], test_metrics["accuracy"])
+    )
 
 
 if __name__ == '__main__':
