@@ -57,22 +57,12 @@ def read_datasets(prefix,data_dir):
     charmap = {c: i for i, c in enumerate({c for ex in datasets['training']
                                           for c in ex['TOKENIZED_LINE']})}
 
-    idmap = {i: c for i, c in enumerate({c for ex in datasets['training']
-                                          for c in ex['TOKENIZED_LINE']})}
-
-
     charmap[UNK] = len(charmap)
-    idmap[len(charmap)-1] = UNK
-
     charmap[WORD_START] = len(charmap)
-    idmap[len(charmap)-1] = WORD_START
-
     charmap[WORD_END] = len(charmap)
-    idmap[len(charmap)-1] = WORD_END
-
     charmap[PADDING] = len(charmap)
-    idmap[len(charmap)-1] = PADDING
 
+    idmap = {i: c for c, i in charmap.items()}
 
     for word_ex in datasets['training']:
         compute_tensor(word_ex, charmap)
