@@ -25,7 +25,7 @@ def train(model, data_train, optimizer, loss_fn, steps, log_interval=100,
         running_loss = 0
 
         # Keep track of best valid loss for saving models
-        best_valid_loss = 100
+        best_valid_acc = 0.
         step = 0
         while step < steps:
             for batch in data_train:
@@ -67,11 +67,11 @@ def train(model, data_train, optimizer, loss_fn, steps, log_interval=100,
                         )
                     )
                     # Only save new model if better than earlier
-                    if val_metrics["loss"] < best_valid_loss:
+                    if val_metrics["accuracy"] > best_valid_acc:
                         torch.save(model.state_dict(), "{}/{}-{}.pt".format(
                             save_dir, exp_name, step
                         ))
-                        best_valid_loss = val_metrics["loss"]
+                        best_valid_acc = val_metrics["accuracy"]
 
                 step += 1
                 if step >= steps:
