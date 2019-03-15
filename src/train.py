@@ -108,7 +108,7 @@ def evaluate(model, data, id2char_map, loss_fn, device):
             # if '<w>' and '</w>' are in output, choose the characters between them
             for i, x in enumerate(x_strings):
                 if re.search('<w>(.*)</w>', x):
-                    x_strings[i] = re.search('<w>(.*)</w>', x).group(1)
+                    x_strings[i] = re.search('<w>(.*?)</w>', x).group(1)
 
 
             # turn y to a list of strings

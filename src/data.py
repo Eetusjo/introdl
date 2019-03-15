@@ -11,12 +11,13 @@ WORD_END = "</w>"
 PADDING = '#'
 UNK = 'UNK'
 
+
 def read_lines(fn):
     data = []
     for line in open(fn):
         line = line.strip('\n')
         if line:
-            src = " ".join(str(line.split("\t")[0])) + " " +re.sub(",", " ", line.split("\t")[1])
+            src = " ".join(str(line.split("\t")[0])) + " " + re.sub(",", " ", line.split("\t")[1])
             src = re.sub("   ", " <SPACE> ", src)
             tgt = " ".join(line.split("\t")[2])
             tgt = re.sub("   ", " <SPACE> ", tgt)
@@ -29,24 +30,27 @@ def read_lines(fn):
 
     return data
 
+
 def ids2char(output):
     pass
 
 
-def compute_tensor(word_ex,charmap):
-    word_ex['SOURCE_TENSOR'] = torch.LongTensor([charmap[WORD_START]]
-                                     + [charmap[c] if c in charmap
-                                                   else charmap[UNK]
-                                                   for c in word_ex['TOKENIZED_SOURCE']]
-                                     + [charmap[WORD_END]])
+def compute_tensor(word_ex, charmap):
+    word_ex['SOURCE_TENSOR'] = torch.LongTensor(
+        [charmap[WORD_START]]
+        + [charmap[c] if c in charmap else charmap[UNK]
+           for c in word_ex['TOKENIZED_SOURCE']]
+        + [charmap[WORD_END]]
+    )
 
     word_ex['TARGET_TENSOR'] = torch.LongTensor(
-        [charmap[WORD_START]] + [charmap[c] if c in charmap else charmap[UNK]
-                                 for c in word_ex['TOKENIZED_TARGET']]
+        [charmap[WORD_START]]
+        + [charmap[c] if c in charmap else charmap[UNK]
+           for c in word_ex['TOKENIZED_TARGET']]
         + [charmap[WORD_END]])
 
 
-def read_datasets(prefix,data_dir):
+def read_datasets(prefix, data_dir):
     datasets = {'training': read_lines(os.path.join(data_dir, '%s-%s' %
                                                     (prefix, 'train'))),
                 'dev': read_lines(os.path.join(data_dir, '%s-%s' %
@@ -54,8 +58,11 @@ def read_datasets(prefix,data_dir):
                 'test': read_lines(os.path.join(data_dir, '%s-%s' %
                                                 (prefix, 'test')))}
 
-    charmap = {c: i for i, c in enumerate({c for ex in datasets['training']
-                                          for c in ex['TOKENIZED_LINE']})}
+    charmap = {
+        c: i for i, c in enumerate(
+            sorted({c for ex in datasets['training']
+                    for c in ex['TOKENIZED_LINE']}))
+    }
 
     charmap[UNK] = len(charmap)
     charmap[WORD_START] = len(charmap)
