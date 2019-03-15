@@ -68,7 +68,7 @@ def train(model, data_train, optimizer, loss_fn, steps, log_interval=100,
                     )
                     # Only save new model if better than earlier
                     if val_metrics["loss"] < best_valid_loss:
-                        torch.save(model, "{}/{}-{}.pt".format(
+                        torch.save(model.state_dict(), "{}/{}-{}.pt".format(
                             save_dir, exp_name, step
                         ))
                         best_valid_loss = val_metrics["loss"]
@@ -190,7 +190,7 @@ def main(args):
         model.to(device=device)
 
     if args.resume:
-        model = torch.load(args.resume)
+        model.load_state_dict(torch.load(args.resume))
 
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
