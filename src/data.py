@@ -31,10 +31,6 @@ def read_lines(fn):
     return data
 
 
-def ids2char(output):
-    pass
-
-
 def compute_tensor(word_ex, charmap):
     word_ex['SOURCE_TENSOR'] = torch.LongTensor(
         [charmap[WORD_START]]
